@@ -6,7 +6,7 @@ ROOT_DIR=$(shell pwd)
 # Option to build Ceres-Solver and its dependencies as part of the 3rdParty projects
 CERES ?= ON
 # Option to build LIBXML2 as part of the 3rdParty projects
-LIBXML2 ?= ON
+LIBXML2 ?= $(OMTLM)
 # Option to enable the OMSysIdent parameter estimation module within the OMSimulator project
 OMSYSIDENT ?= ON
 # Option to enable OMTLM
@@ -52,7 +52,6 @@ else ifeq (MINGW,$(findstring MINGW,$(detected_OS)))
 else
 	BUILD_DIR := build/linux
 	INSTALL_DIR := install/linux
-	CMAKE_TARGET=-DCMAKE_SYSTEM_NAME=$(detected_OS)
 	export ABI := LINUX64
 	FEXT=.so
 endif
@@ -79,12 +78,22 @@ endif
 endif
 
 ifeq ($(CROSS_TRIPLE),)
+  CMAKE=cmake $(CMAKE_TARGET)
 else
-	LUA_EXTRA_FLAGS=CC=$(CC) CXX=$(CXX) RANLIB=$(CROSS_TRIPLE)-ranlib detected_OS=$(detected_OS)
-	OMTLM := OFF
-	CROSS_TRIPLE_DASH = $(CROSS_TRIPLE)-
-	HOST_CROSS_TRIPLE = "--host=$(CROSS_TRIPLE)"
-	FMIL_FLAGS ?=
+  LUA_EXTRA_FLAGS=CC=$(CC) CXX=$(CXX) RANLIB=$(CROSS_TRIPLE)-ranlib detected_OS=$(detected_OS)
+  OMTLM := OFF
+  CERES := OFF
+  OMSYSIDENT := OFF
+  LIBXML2 := OFF
+  CROSS_TRIPLE_DASH = $(CROSS_TRIPLE)-
+  HOST_CROSS_TRIPLE = "--host=$(CROSS_TRIPLE)"
+  FMIL_FLAGS ?=
+  AR ?= $(CROSS_TRIPLE)-ar
+  RANLIB ?= $(CROSS_TRIPLE)-ranlib
+  CMAKE=cmake $(CMAKE_TARGET)
+  ifeq (MINGW,$(findstring MINGW,$(detected_OS)))
+    CMAKE_TARGET=-G "Unix Makefiles" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_RC_COMPILER=$(CROSS_TRIPLE)-windres
+  endif
 endif
 
 ifeq ($(BOOST_ROOT),)
@@ -110,8 +119,8 @@ OMSimulatorCore:
 	@echo "# make OMSimulatorCore"
 	@echo
 	@$(MAKE) -C $(BUILD_DIR) install
-	test ! "$(detected_OS)" = Darwin || ($(CROSS_TRIPLE_DASH)install_name_tool -id "@rpath/libOMSimulatorLib.dylib" $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)/libOMSimulatorLib.dylib)
-	test ! "$(detected_OS)" = Darwin || ($(CROSS_TRIPLE_DASH)install_name_tool -id "@rpath/libOMSimulatorLua.dylib" $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)/libOMSimulatorLua.dylib)
+	test ! "$(detected_OS)" = Darwin || ($(CROSS_TRIPLE_DASH)install_name_tool -id "@rpath/libOMSimulator.dylib" $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)/libOMSimulator.dylib)
+	test ! "(" "$(detected_OS)" = Darwin -a -f $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)/libOMSimulatorLua.dylib  ")" || ($(CROSS_TRIPLE_DASH)install_name_tool -id "@rpath/libOMSimulatorLua.dylib" $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)/libOMSimulatorLua.dylib)
 	test ! "$(detected_OS)" = Darwin || ($(CROSS_TRIPLE_DASH)install_name_tool -change MAC64/libomtlmsimulator.dylib "@rpath/libomtlmsimulator.dylib" $(TOP_INSTALL_DIR)/bin/OMSimulator)
 	test ! "$(detected_OS)" = Darwin || ($(CROSS_TRIPLE_DASH)install_name_tool -add_rpath "@loader_path/../../../../lib/$(HOST_SHORT_OMC)" $(TOP_INSTALL_DIR)/bin/OMSimulator)
 	test ! "$(detected_OS)" = Darwin || ($(CROSS_TRIPLE_DASH)install_name_tool -add_rpath "@loader_path/../lib/$(HOST_SHORT_OMC)" $(TOP_INSTALL_DIR)/bin/OMSimulator)

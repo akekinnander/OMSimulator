@@ -21,15 +21,17 @@ IF (Ceres_FOUND AND OMSYSIDENT)
 ENDIF()
 
 # Shared library version
-add_library(OMSimulatorLua SHARED OMSimulatorLua.c)
+add_library(OMSimulatorLua STATIC OMSimulatorLua.c)
+set_target_properties(OMSimulatorLua PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 IF(WIN32 AND MSVC)
-  target_link_libraries(OMSimulatorLua OMSimulatorLib_shared fmilib sundials_kinsol sundials_cvode sundials_nvecserial lua wsock32 ws2_32)
+  target_link_libraries(OMSimulatorLua OMSimulatorLib fmilib sundials_kinsol sundials_cvode sundials_nvecserial lua wsock32 ws2_32)
 ELSEIF (WIN32 AND MINGW)
-  target_link_libraries(OMSimulatorLua OMSimulatorLib_shared fmilib shlwapi sundials_kinsol sundials_cvode sundials_nvecserial lua wsock32 ws2_32)
+  target_link_libraries(OMSimulatorLua OMSimulatorLib fmilib shlwapi sundials_kinsol sundials_cvode sundials_nvecserial lua wsock32 ws2_32)
 ELSEIF (APPLE)
-  target_link_libraries(OMSimulatorLua OMSimulatorLib_shared fmilib sundials_kinsol sundials_cvode sundials_nvecserial lua)
+  target_link_libraries(OMSimulatorLua OMSimulatorLib fmilib sundials_kinsol sundials_cvode sundials_nvecserial lua)
 ELSE ()
-  target_link_libraries(OMSimulatorLua OMSimulatorLib_shared fmilib sundials_kinsol sundials_cvode sundials_nvecserial)
+  target_link_libraries(OMSimulatorLua OMSimulatorLib fmilib sundials_kinsol sundials_cvode sundials_nvecserial)
 ENDIF ()
 
-install(TARGETS OMSimulatorLua DESTINATION lib/${HOST_SHORT})
+# install(TARGETS OMSimulatorLua DESTINATION lib/${HOST_SHORT})
