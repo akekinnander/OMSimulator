@@ -56,7 +56,7 @@ pipeline {
               label 'linux'
               alwaysPull true
               args "--mount type=volume,source=runtest-omsimulator-cache-linux64-asan,target=/cache/runtest " +
-                   "--cap-add SYS_PTRACE " // Needed for ASAN
+                   "--cap-add SYS_PTRACE " + // Needed for ASAN
                    "--oom-kill-disable -m 1024m --memory-swap 1024m" // Needed for ASAN
             }
           }
