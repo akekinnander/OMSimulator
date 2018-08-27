@@ -386,7 +386,7 @@ void partest(cache=true, asan=false, extraArgs='') {
   ${asan ? "" : "ulimit -v 6291456" /* Max 6GB per process */}
 
   cd testsuite/partest
-  ./runtests.pl ${asan ? "-asan": ""} -j${numPhysicalCPU()} -nocolour -with-xml ${extraArgs}
+  ./runtests.pl ${asan ? "-asan -fast": ""} -j${numPhysicalCPU()} -nocolour -with-xml ${extraArgs}
   CODE=\$?
   test \$CODE = 0 -o \$CODE = 7 || exit 1
   """
